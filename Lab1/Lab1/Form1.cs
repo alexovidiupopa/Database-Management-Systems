@@ -13,137 +13,63 @@ namespace Lab1
 {
     public partial class Form1 : Form
     {
+        private SqlConnection sqlConn;
+        private DataSet dataSet;
+        private SqlDataAdapter daParent, daChild;
+        private DataRelation dataRelation;
+        private BindingSource bsParent, bsChild;
+
         public Form1()
         {
             InitializeComponent();
+            loadData();
         }
 
-        private void deleteRecords_Click(object sender, EventArgs e)
+        private void loadData()
         {
-            String selectedId = view.SelectedCells[0].Value.ToString();
-            SqlConnection conn = new SqlConnection
-            {
-                ConnectionString = "Data Source=ALEX-PC\\SQLEXPRESS01;Initial Catalog=Chess;Integrated Security=true"
-            };
-            
-            try
-            {
-                conn.Open();
-                SqlCommand firstDelete = new SqlCommand("DELETE FROM TournamentParticipantsHistory WHERE player_id IN (SELECT player_id FROM ChessPlayer WHERE club_id=" + selectedId + ")", conn);
-                firstDelete.ExecuteNonQuery();
-                SqlCommand cmd = new SqlCommand("DELETE FROM ChessPlayer WHERE club_id=" + selectedId, conn);
-                cmd.ExecuteNonQuery();
-            }
-            catch (SqlException exc)
-            {
-                Console.WriteLine(exc.Message);
-            }
-            finally
-            {
-                conn.Close();
-            }
+            this.sqlConn = new SqlConnection(getConnectionString());
+
+            this.dataSet = new DataSet();
+
+            this.daParent = new SqlDataAdapter("SELECT * FROM ChessPlayer", sqlConn);
+            SqlCommandBuilder cb = new SqlCommandBuilder(daParent);
+            this.daParent.Fill(dataSet, "ChessPlayer");
+            this.daChild = new SqlDataAdapter("SELECT * FROM FideStandings WHERE player_id=1", sqlConn);
+            cb = new SqlCommandBuilder(daChild);
+            this.daChild.Fill(dataSet, "FideStandings");
+
+            DataRelation drel = new DataRelation("fk_standings_players", dataSet.Tables["ChessPlayer"].Columns["player_id"],
+                dataSet.Tables["FideStandings"].Columns["player_id"]);
+            this.dataSet.Relations.Add(drel);
+            bsParent = new BindingSource();
+            bsParent.DataSource = dataSet;
+            bsParent.DataMember = "ChessPlayer";
+
+            bsChild = new BindingSource();
+            bsChild.DataSource = bsParent;
+            bsChild.DataMember = "fk_standings_players";
+
+            this.view.DataSource = bsParent;
+            this.viewChildren.DataSource = bsChild;
+        }
+        
+
+        private void updateDb_Click(object sender, EventArgs e)
+        {
+            this.daChild.Update(this.dataSet, "FideStandings");
         }
 
-        private void textBox4_Click(object sender, EventArgs e)
+       
+        private String getConnectionString()
         {
-            textBox4.Text = "";
+            return "Data Source=DESKTOP-48S6415\\SQLEXPRESS;Initial Catalog=Chess4;Integrated Security=true";
         }
 
-        private void textBox3_Click(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
-            textBox3.Text = "";
+
         }
 
-        private void textBox2_Click(object sender, EventArgs e)
-        {
-            textBox2.Text = "";
-        }
-
-        private void textBox1_Click(object sender, EventArgs e)
-        {
-            textBox1.Text = "";
-        }
-
-        private void updateRecord_Click(object sender, EventArgs e)
-        {
-            
-            int playerId = int.Parse(textBox1.Text);
-            String playerName = textBox2.Text.ToString();
-            int rating = int.Parse(textBox3.Text);
-            int titleId = int.Parse(textBox4.Text);
-            int selectedId = int.Parse(view.SelectedCells[0].Value.ToString());
-            SqlConnection conn = new SqlConnection
-            {
-                ConnectionString = "Data Source=ALEX-PC\\SQLEXPRESS01;Initial Catalog=Chess;Integrated Security=true"
-            };
-            try
-            {    
-                conn.Open();
-                SqlCommand cmd = new SqlCommand("UPDATE ChessPlayer\nSET player_name = '" + playerName + "', rating = " + rating + ", title_id = " + titleId + "\nWHERE player_id=" + playerId + "AND club_id=" + selectedId + ";", conn);
-                cmd.ExecuteNonQuery();
-            }
-            catch (SqlException exc)
-            {
-                Console.WriteLine(exc.Message); 
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
-
-        private void displayParent_Click(object sender, EventArgs e)
-        {
-            SqlConnection conn = new SqlConnection();
-            conn.ConnectionString = "Data Source=ALEX-PC\\SQLEXPRESS01;Initial Catalog=Chess;Integrated Security=true";
-            conn.Open();
-            DataSet ds = new DataSet();
-            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM ChessClub", conn);
-            SqlCommandBuilder cb = new SqlCommandBuilder(da);
-            da.Fill(ds, "ChessClub");
-            view.DataSource = ds.Tables[0];
-            conn.Close();
-        }
-
-        private void displayChild_Click(object sender, EventArgs e)
-        {
-            SqlConnection conn = new SqlConnection();
-            conn.ConnectionString = "Data Source=ALEX-PC\\SQLEXPRESS01;Initial Catalog=Chess;Integrated Security=true";
-            conn.Open();
-            DataSet ds = new DataSet();
-            String selectedId = view.SelectedCells[0].Value.ToString();
-            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM ChessPlayer WHERE club_id=" + selectedId, conn);
-            SqlCommandBuilder cb = new SqlCommandBuilder(da);
-            da.Fill(ds, "ChessPlayer");
-            view.DataSource = ds.Tables[0];
-            conn.Close();
-        }
-
-        private void addRecord_Click(object sender, EventArgs e)
-        {
-            int playerId = int.Parse(textBox1.Text);
-            String playerName = textBox2.Text.ToString();
-            int rating = int.Parse(textBox3.Text);
-            int titleId = int.Parse(textBox4.Text);
-            int selectedId = int.Parse(view.SelectedCells[0].Value.ToString());
-            SqlConnection conn = new SqlConnection
-            {
-                ConnectionString = "Data Source=ALEX-PC\\SQLEXPRESS01;Initial Catalog=Chess;Integrated Security=true"
-            };
-            try
-            {
-                conn.Open();
-                SqlCommand cmd = new SqlCommand("INSERT INTO ChessPlayer (player_id, player_name, rating, title_id, club_id) VALUES (" + playerId + ", '" + playerName + "', " + rating + ", " + titleId + ", " + selectedId + ");", conn);
-                cmd.ExecuteNonQuery();
-            }
-            catch (SqlException exc)
-            {
-                Console.WriteLine(exc.Message);
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
+        
     }
 }
