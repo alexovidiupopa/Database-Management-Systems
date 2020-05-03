@@ -1,0 +1,15 @@
+-- phantom problem T2 - initial iso level set to repeatable read
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
+BEGIN TRAN
+SELECT * FROM ChessTitle
+WAITFOR DELAY '00:00:05'
+SELECT * FROM ChessTitle
+COMMIT TRAN
+
+-- solution: iso level-> serializable
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
+BEGIN TRAN
+SELECT * FROM ChessTitle
+WAITFOR DELAY '00:00:05'
+SELECT * FROM ChessTitle
+COMMIT TRAN

@@ -33,8 +33,8 @@ namespace Lab2
 
             daParent = new SqlDataAdapter(getParentQuery(), sqlConn);
             SqlCommandBuilder cb = new SqlCommandBuilder(daParent);
-            Console.WriteLine(getParentTable());
             daParent.Fill(dataSet, getParentTable());
+
             daChild = new SqlDataAdapter(getChildQuery(), sqlConn);
             cb = new SqlCommandBuilder(daChild);
             daChild.Fill(dataSet, getChildTable());
@@ -44,6 +44,7 @@ namespace Lab2
                 dataSet.Tables[getChildTable()].Columns[getFKName()]);
             dataSet.Relations.Add(drel);
 
+            // create bindings
             bsParent = new BindingSource();
             bsParent.DataSource = dataSet;
             bsParent.DataMember = getParentTable();
@@ -52,6 +53,7 @@ namespace Lab2
             bsChild.DataSource = bsParent;
             bsChild.DataMember = "fk_child_parent";
 
+            // populate datagridviews
             parentView.DataSource = bsParent;
             childView.DataSource = bsChild;
         }
@@ -87,6 +89,7 @@ namespace Lab2
 
         private void updateDb_Click(object sender, EventArgs e)
         {
+            // save in the db
             this.daParent.Update(this.dataSet, getParentTable());
             this.daChild.Update(this.dataSet, getChildTable());
         }
