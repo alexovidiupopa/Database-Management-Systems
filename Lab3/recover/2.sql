@@ -60,6 +60,7 @@ AS
 
 				INSERT INTO TacticsHistory VALUES (@player_id, @tactic_id);
 				print 'Added!'
+				--log the transaction
 				INSERT INTO LogTable VALUES('add','TacticsHistory',GETDATE())
 				COMMIT TRAN
 		END TRY
@@ -70,9 +71,10 @@ AS
 		END CATCH
 GO
 
-select * from ChessPlayer
-select * from Tactic
+--select * from ChessPlayer
+--select * from Tactic
 
+-- each of the three transactions are independent of the others
 GO
 CREATE OR ALTER PROCEDURE uspPerformAddsBadScenario
 AS 
@@ -91,5 +93,5 @@ GO
 EXEC uspPerformAddsGoodScenario
 EXEC uspPerformAddsBadScenario
 
-select * from LogTable
+--select * from LogTable
 -- 4 entries were added to the log table, showing the 4 transactions which succeeded

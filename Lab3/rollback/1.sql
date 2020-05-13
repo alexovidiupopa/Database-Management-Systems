@@ -8,6 +8,7 @@ CREATE TABLE LogTable(
 );
 
 GO
+-- check for duplicates
 CREATE OR ALTER PROCEDURE uspAddTactic (@tactic_id TINYINT, @tactic_name VARCHAR(30))
 AS
 	SET NOCOUNT ON;
@@ -20,6 +21,7 @@ AS
 	
 GO
 
+-- check for duplicates
 CREATE OR ALTER PROCEDURE uspAddPlayer (@player_id INT, @player_name VARCHAR(100), @title_id TINYINT, @club_id TINYINT)
 AS
 	SET NOCOUNT ON
@@ -31,6 +33,7 @@ AS
 	INSERT INTO LogTable VALUES ('add', 'player',GETDATE())
 GO
 
+-- check that player_id is ok, tactic_id is ok  & the pair doesn't already exist 
 CREATE OR ALTER PROCEDURE uspAddTacticsHistory (@player_id INT, @tactic_id INT)
 AS
 	SET NOCOUNT ON;
@@ -52,6 +55,7 @@ AS
 
 	INSERT INTO TacticsHistory VALUES (@player_id, @tactic_id);
 	print 'Added!'
+	--log the transaction
 	INSERT INTO LogTable VALUES('add','TacticsHistory',GETDATE())
 GO
 
@@ -66,7 +70,7 @@ AS
 		EXEC uspAddTacticsHistory 11,5 
 		COMMIT TRAN
 	END TRY
-	BEGIN CATCH 
+	BEGIN CATCH -- if one transaction fails i.e. throws exception, rollback everything
 		ROLLBACK TRAN
 		RETURN
 	END CATCH
@@ -91,4 +95,4 @@ EXEC uspAddRollbackScenario
 EXEC uspAddCommitScenario
 
 --3 entries will be added to the log table
-select * from LogTable
+--select * from LogTable
